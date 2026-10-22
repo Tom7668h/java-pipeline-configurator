@@ -68,23 +68,26 @@ flowchart TD
 
 ---
 
-### 🚀 Schnellstart
+### 🚀 Schnellstart & Installation
 
 #### Voraussetzungen
 - Java 17 oder 21 LTS (`JAVA_HOME` gesetzt)
 - Apache Maven 3.8+
 
-#### Kompilieren & Ausführen
+#### 1. Repository klonen & kompilieren
 ```powershell
-# 1. Repository klonen & kompilieren
 git clone https://github.com/Tom7668h/java-pipeline-configurator.git
 cd java-pipeline-configurator
 mvn clean package -DskipTests
+```
 
-# 2. Desktop-Anwendung starten
+#### 2. Desktop-Anwendung starten
+```powershell
 java -jar target/java-pipeline-configurator-1.0.0.jar
+```
 
-# 3. Automatisierte Tests ausführen
+#### 3. Automatisierte Tests ausführen
+```powershell
 mvn test
 ```
 
@@ -108,13 +111,16 @@ mvn test
 
 ---
 
+### 📄 Lizenz
+MIT-Lizenz. Erstellt von [Tom7668h](https://github.com/Tom7668h).
+
 <br><br>
 
 ---
 
 ## 🇬🇧 English Documentation
 
-An enterprise-grade, multi-threaded **Desktop Application & Barcode Pipeline Configurator** engineered for high-throughput manufacturing, intralogistics, and automated conveyor systems. Built with **Java 17/21 LTS**, **Java Swing**, **FlatLaf (JetBrains-grade Dark Look & Feel)**, **HikariCP**, and **Embedded H2 SQL Database**.
+An enterprise-grade, multi-threaded **Desktop Application & Barcode Pipeline Configurator** engineered for high-throughput manufacturing, intralogistics, and automated conveyor systems. Built with **Java 17/21 LTS**, **Java Swing**, **FlatLaf (JetBrains-grade Dark Look & Feel)**, **HikariCP Connection Pooling**, and **Embedded H2 SQL Database**.
 
 ---
 
@@ -128,29 +134,88 @@ In automated factories and distribution centers (sorting lines, parcel belts, pa
 
 #### The Solution
 This configurator provides an all-in-one desktop command center:
-1. **Dynamic Regex Rule Editor:** Create, prioritize, and toggle barcode parsing rules on the fly with live named-group extraction (`sku`, `lot`, `weight`).
+1. **Dynamic Regex Rule Editor:** Create, prioritize, and toggle barcode parsing rules on the fly with live named-group extraction (`sku`, `lot`, `weight`) without application restart.
 2. **Multi-Threaded Hardware Simulator:** Simulates 4 industrial scanner stations simultaneously via `ScheduledExecutorService`, processing up to 1,200 scans/minute with live KPI telemetry.
 3. **Automated Quarantine & Anomaly Detection:** Validates physical package weights against master data ($\pm 15\%$ tolerance) and isolates bad parts (`QUARANTINE` / `REJECTED`) with clear audit reasons.
 4. **Interactive SQL Database Explorer:** Directly browse and query local database tables (`scan_logs`, `routing_rules`, `articles`) with metadata introspection and 1-click CSV audit export.
-5. **Robust Layered Architecture:** Model-DAO-Service-UI design with strict PreparedStatements, transactional connection pooling via HikariCP, and zero external runtime framework overhead.
+5. **Clean Layered Architecture:** Pure JDBC with PreparedStatements, transactional connection pooling via HikariCP, and zero external runtime framework overhead.
 
 ---
 
-### 🚀 Quickstart
+### 🏗️ System Architecture
+
+```mermaid
+flowchart TD
+    subgraph HardwareSimulation["Hardware Scanner Simulation"]
+        Station1["Station 1: Inbound (Sick CLV690)"]
+        Station2["Station 2: Sorting (Cognex DataMan)"]
+        Station3["Station 3: Assembly (Zebra DS3608)"]
+        Station4["Station 4: Dispatch (Datalogic Matrix)"]
+    end
+
+    HardwareSimulation --> SimController["SimulationController (ScheduledExecutorService)"]
+    SimController --> Pipeline["PipelineProcessor"]
+
+    subgraph CorePipeline["Core Processing Pipeline"]
+        Pipeline --> RuleParser["RuleParserService (Regex Named Groups)"]
+        RuleParser --> MasterData["ArticleDao (Master Data Lookup)"]
+        MasterData --> WeightTolerance{"Weight delta <= 15%?"}
+        WeightTolerance -->|Within Range| StatusOk["Status: PROCESSED"]
+        WeightTolerance -->|Divergence >15%| StatusQuarantine["Status: QUARANTINE"]
+        RuleParser -->|Syntax Error / Unknown SKU| StatusReject["Status: REJECTED"]
+    end
+
+    StatusOk --> DB[("H2 / MariaDB SQL Storage")]
+    StatusQuarantine --> DB
+    StatusReject --> DB
+
+    DB --> UI["FlatLaf Modern Dark Swing UI"]
+```
+
+---
+
+### 🚀 Quickstart & Installation
 
 #### Prerequisites
-- Java 17 or 21 LTS
+- Java 17 or 21 LTS (`JAVA_HOME` set)
 - Apache Maven 3.8+
 
-#### Build & Run
+#### 1. Clone Repository & Build
 ```bash
 git clone https://github.com/Tom7668h/java-pipeline-configurator.git
 cd java-pipeline-configurator
 mvn clean package -DskipTests
+```
+
+#### 2. Launch Desktop Application
+```bash
 java -jar target/java-pipeline-configurator-1.0.0.jar
+```
+
+#### 3. Run Automated Tests
+```bash
+mvn test
+```
+
+---
+
+### 🧪 Test Verification
+```bash
+mvn test
+```
+```text
+[INFO] Running de.tom.configurator.service.RuleParserServiceTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.120 s
+[INFO] Running de.tom.configurator.service.PipelineProcessorTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.285 s
+[INFO] Running de.tom.configurator.dao.RoutingRuleDaoTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.210 s
+[INFO] 
+[INFO] Results:
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0
 ```
 
 ---
 
 ### 📄 License
-MIT © Tom7668h
+MIT License. Created by [Tom7668h](https://github.com/Tom7668h).
